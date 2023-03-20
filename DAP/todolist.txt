@@ -1,0 +1,3 @@
+[ ] Segmenter le scrapping au cas où il plante
+[ ] Faire la comparaison entre les triplets possibles de rachat PI et les prix CM
+[ ] Faire des stats sur le pourcentage de cartes associées
