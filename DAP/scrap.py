@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 import requests as r
 import re
-import os
 
-mode_test = False
+mode_test = True
+
+name_df = 'linked_url_test.csv'
 
 url_hotlist = "https://en.play-in.com/rachat/hotlist/magic/"
 url_CM = "https://www.cardmarket.com/en/Magic/Products/Singles/"
@@ -57,7 +58,7 @@ def get_set_from_page(page) :
             if i!=j and occ[i]==occ[j] :
                 verif = False
         if verif :
-            output.append(occ[i].replace(":","").replace(" ","-"))
+            output.append(occ[i].replace(":","").replace(" ","-").replace("'",""))
 
     return output
 
@@ -130,7 +131,7 @@ def get_dataframe(test_url_cm=True) :
     return df
 
 df = get_dataframe()
-df.to_csv('linked_url.csv', index=False)
+df.to_csv(name_df, index=False)
 print(df)
 
 
