@@ -10,13 +10,13 @@ name_df = 'linked_url_test.csv'
 url_hotlist = "https://en.play-in.com/rachat/hotlist/magic/"
 url_CM = "https://www.cardmarket.com/en/Magic/Products/Singles/"
 
-#Renvoie le code html de la page pointée par l'url
 def get_page_text_from_url(url_card) :
     html_request = r.get(url_card)
     #URL request get refused
     #assert(str(html_request)=="<Response [200]>")
     if(str(html_request)!="<Response [200]>") :
-        return url_hotlist
+        print("error : no reponse 200 html request : " + url_card)
+        return "error"
     return html_request.text
 
 #Retourne le nombre de pages web de la hotlist
@@ -59,6 +59,25 @@ def get_set_from_page(page) :
                 verif = False
         if verif :
             output.append(occ[i].replace(":","").replace(" ","-").replace("'",""))
+
+    return output
+
+#Retourne les sets d'une carte PI qui sont rachetés
+#On ne compte pas les différentes versions d'une carte d'une même extension
+#On garde la str de sortie sous le format de playin
+def get_set_from_page_PI_format(page) :
+    name_set = r'<img src="/img/extension/symbole_extension/\d*.png" title="([ :&\w]*)" [ \S]*<div class="tr price price_mobile">'
+    occ = re.compile(name_set).findall(page)
+
+    #Supprimer les problèmes
+    output = []
+    for i in range(0,len(occ)) :
+        verif = True
+        for j in range(0,len(occ)) :
+            if i!=j and occ[i]==occ[j] :
+                verif = False
+        if verif :
+            output.append(occ[i])
 
     return output
 
@@ -108,13 +127,14 @@ def check_url_cm(url_CM) :
 #Tous les noms (name et set) sont au format pour accéder via requête url à la page CM
 #Le champ url_CM contient l'url SUPPOSE de la page CM, possible erreur, notamment à cause des caractères spéciaux
 def get_dataframe(test_url_cm=True) :
-    df = pd.DataFrame({'url_PI': [], 'name': [], 'set': [], 'url_CM': []})
+    df = pd.DataFrame({'url_PI': [], 'set_PI': [], 'name': [], 'set': [], 'url_CM': []})
     print("Assembling all cards_url of PlayIn...", end='\r')
     hotlist = get_all_hotlist_cards_url()
     for percent_card, turl_PI in enumerate(hotlist) :
         page = get_page_text_from_url(turl_PI)
         tname = get_card_name_from_page(page)
         sets = get_set_from_page(page)
+        sets_PI_format = get_set_from_page_PI_format(page)
         for percent_set, tset in enumerate(sets) :
             print("cartes traitées : " + "{:.2f}".format(percent_card*100/len(hotlist)) + " % | sets de la carte : " + str(percent_set) + "/" + str(len(sets)) + "        ", end='\r')
             turl_CM = url_CM + tset + "/" + tname
@@ -123,10 +143,10 @@ def get_dataframe(test_url_cm=True) :
                 #print(tname)
                 #print(tset)
                 #print(turl_CM)
-                new_row = pd.DataFrame({'url_PI': [turl_PI], 'name': [tname], 'set': [tset], 'url_CM': [turl_CM]})
+                new_row = pd.DataFrame({'url_PI': [turl_PI], 'set_PI': [sets_PI_format[percent_set]], 'name': [tname], 'set': [tset], 'url_CM': [turl_CM]})
                 df = pd.concat([df, new_row]).reset_index(drop=True)
             else :
-                new_row = pd.DataFrame({'url_PI': [turl_PI], 'name': [tname], 'set': [tset], 'url_CM': [turl_CM]})
+                new_row = pd.DataFrame({'url_PI': [turl_PI], 'set_PI': [sets_PI_format[percent_set]], 'name': [tname], 'set': [tset], 'url_CM': [turl_CM]})
                 df = pd.concat([df, new_row]).reset_index(drop=True)
     return df
 
